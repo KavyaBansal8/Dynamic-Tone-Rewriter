@@ -1,34 +1,29 @@
 import * as THREE from 'three';
 import React, { Suspense, useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF, Environment, Center } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import GrammarModel from "./GrammarModel"; // Import the separate GrammarModel component
 
 const Model = () => {
-  // If you're using a custom GLB model
-  const { scene } = useGLTF("/cube.glb");
-  
+  const { scene } = useGLTF("/voxel_alphabet.glb");
+
   useEffect(() => {
-    // Fix materials to ensure they render properly
     scene.traverse((node) => {
       if (node.isMesh) {
-        // Ensure materials are properly configured
-        node.material.needsUpdate = true;
-        
-        // Make sure materials receive light
         node.castShadow = true;
         node.receiveShadow = true;
-        
-        // Force material to use correct encoding
-        if (node.material.map) {
-          node.material.map.encoding = THREE.sRGBEncoding;
-        }
       }
     });
   }, [scene]);
-  
-  return <primitive object={scene} scale={1.0} rotation={[0, Math.PI/4, 0]} />;
+
+  // The GLB is a wide alphabet board offset from its own origin, so center it
+  // at the world origin and let OrbitControls rotate it about that center.
+  return (
+    <Center>
+      <primitive object={scene} scale={0.4} />
+    </Center>
+  );
 };
 
 const GrammarCheck = () => {
@@ -85,12 +80,12 @@ const GrammarCheck = () => {
             {/* Right Section - 3D Model */}
             <div className="w-1/2 h-full flex items-center justify-center">
               <Suspense fallback={null}>
-                <Canvas 
-                  shadows 
-                  camera={{ position: [3, 3, 3], fov: 50 }}
-                  gl={{ 
+                <Canvas
+                  shadows
+                  camera={{ position: [6, 6, 6], fov: 50 }}
+                  gl={{
                     antialias: true,
-                    outputEncoding: THREE.sRGBEncoding,
+                    outputColorSpace: THREE.SRGBColorSpace,
                     toneMapping: THREE.ACESFilmicToneMapping,
                     toneMappingExposure: 1.0
                   }}
@@ -101,6 +96,9 @@ const GrammarCheck = () => {
                   <directionalLight position={[-5, 5, -5]} intensity={1.5} />
                   <directionalLight position={[0, 5, -5]} intensity={1} />
                   <hemisphereLight args={[0xffffff, 0x444444]} intensity={1} />
+                  {/* Gives the model's material reflections/highlights to render by - without
+                      this, PBR materials read as flat and dark under direct lights alone */}
+                  <Environment preset="studio" />
 
                   <Model />
                   <OrbitControls 
@@ -118,10 +116,10 @@ const GrammarCheck = () => {
           <motion.div
             key="grammar-model"
             className="w-full h-full"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
           >
             <GrammarModel onClose={handleCloseGrammarModel} />
           </motion.div>

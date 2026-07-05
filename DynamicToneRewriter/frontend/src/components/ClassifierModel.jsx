@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Client } from "@gradio/client";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 // Added a new component to receive the analysis data
 function AnalysisReceiver({ transcribedText, predictedEmotion }) {
@@ -139,17 +140,15 @@ function extractTranscriptionAndEmotion(summary) {
 // 3D Ball Component
 function VisualizerBall({ onBallClick, isActive }) {
   const mesh = useRef();
-  const [scale, setScale] = useState(1);
 
   useFrame(({ clock }) => {
-    if (isActive) {
-      const time = clock.getElapsedTime();
-      const dynamicScale = 1 + Math.sin(time * 2) * 0.1;
-      setScale(dynamicScale);
-      mesh.current.scale.set(dynamicScale, dynamicScale, dynamicScale);
-    } else {
-      mesh.current.scale.set(1, 1, 1);
-    }
+    if (!mesh.current) return;
+    const time = clock.getElapsedTime();
+    // Idle: slow, gentle pulse. Active (recording/processing): fast pulse.
+    const s = isActive
+      ? 1 + Math.sin(time * 4) * 0.12
+      : 1 + Math.sin(time * 0.8) * 0.06;
+    mesh.current.scale.set(s, s, s);
   });
 
   return (
@@ -170,6 +169,8 @@ function VisualizerBall({ onBallClick, isActive }) {
 
 // Main Component
 export default function ClassifierModel({ onClose }) {
+  useBodyScrollLock();
+
   // State management
   const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showText, setShowText] = useState(false);

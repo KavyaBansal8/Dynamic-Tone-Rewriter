@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Client } from "@gradio/client";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 // Ball component that animates when recording
 function VisualizerBall({ onBallClick, animationState }) {
@@ -15,28 +16,18 @@ function VisualizerBall({ onBallClick, animationState }) {
 
   useFrame(({ clock }) => {
     if (!mesh.current) return;
-    
+
     const time = clock.getElapsedTime();
-    
-    // Different animation states
-    if (animationState === "recording") {
-      // Fast pulsing animation during recording
-      const dynamicScale = 1 + Math.sin(time * 2) * 0.1;
-      mesh.current.scale.set(dynamicScale, dynamicScale, dynamicScale);
-    } else if (animationState === "processing") {
-      // Rotating animation during processing
-      mesh.current.rotation.y = time * 0.5;
-      const processingScale = 1 + Math.sin(time * 3) * 0.05;
-      mesh.current.scale.set(processingScale, processingScale, processingScale);
-    } else if (animationState === "completed") {
-      // Slow gentle breathing animation after completion
-      const gentleScale = 1 + Math.sin(time * 0.8) * 0.05;
-      mesh.current.scale.set(gentleScale, gentleScale, gentleScale);
-      mesh.current.rotation.y = time * 0.2;
+
+    // recording/processing = fast pulse; completed/idle = slow gentle pulse.
+    if (animationState === "recording" || animationState === "processing") {
+      const s = 1 + Math.sin(time * 4) * 0.12;
+      mesh.current.scale.set(s, s, s);
+      mesh.current.rotation.y = animationState === "processing" ? time * 0.5 : 0;
     } else {
-      // Idle state - minimal movement
-      mesh.current.scale.set(1, 1, 1);
-      mesh.current.rotation.y = time * 0.1;
+      const s = 1 + Math.sin(time * 0.8) * 0.06;
+      mesh.current.scale.set(s, s, s);
+      mesh.current.rotation.y = time * 0.15;
     }
   });
 
@@ -60,6 +51,8 @@ function VisualizerBall({ onBallClick, animationState }) {
 }
 
 export default function ToneRewriterApp({ onClose }) {
+  useBodyScrollLock();
+
   // State for recording and processing
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -384,13 +377,13 @@ export default function ToneRewriterApp({ onClose }) {
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-2 rounded-full shadow-md transition z-10"
+        className="absolute top-20 right-5 bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-2 rounded-full shadow-md transition z-10"
       >
         ✕
       </button>
 
       {/* Style selector */}
-      <div className="absolute top-5 left-5 z-10">
+      <div className="absolute top-20 left-5 z-10">
         <label className="text-white font-medium mb-2 block">Response Style:</label>
         <select 
           value={selectedStyle}

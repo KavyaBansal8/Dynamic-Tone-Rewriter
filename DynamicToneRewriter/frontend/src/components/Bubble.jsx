@@ -17,7 +17,7 @@ const Bubble = () => {
     <motion.div
       className="fixed w-10 h-10 bg-white opacity-30 rounded-full z-50 pointer-events-none"
       animate={{ x: position.x, y: position.y }}
-      transition={{ type: "bubble", stiffness: 100, damping: 10 }}
+      transition={{ type: "spring", stiffness: 100, damping: 10 }}
     />
   );
 };

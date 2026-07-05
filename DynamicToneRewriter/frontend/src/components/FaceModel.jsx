@@ -12,7 +12,7 @@ import { Suspense, useRef } from "react";
 const emotions = ["Happy", "Sad", "Frustrated", "Excited", "Angry", "Calm", "Anxious"];
 
 const Model = () => {
-  const { scene } = useGLTF("source/Metageist-FutureShock-clip.glb");
+  const { scene } = useGLTF("/source/Metageist-FutureShock-clip.glb");
   return (
     <group>
       <primitive 

@@ -71,3 +71,8 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.nav-tab-active:hover {
+  color: var(--tab-glow);
+  text-shadow: 0 0 8px var(--tab-glow), 0 0 18px var(--tab-glow);
+}

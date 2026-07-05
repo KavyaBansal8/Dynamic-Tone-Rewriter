@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-scroll";
 import { useAuth } from "../AuthContext";
-import logo from "../assets/logo.png";
 
 const tabThemes = {
   "tone-classifier": "bg-red-600",
   "tone-rewriter": "bg-yellow-500",
   "mood-enhancer": "bg-cyan-500",
   "grammar-check": "bg-purple-500",
-  "footer": "bg-navy-700"
+  "footer": "bg-blue-900"
+};
+
+const tabAccentColors = {
+  "tone-classifier": "#dc2626",
+  "tone-rewriter": "#eab308",
+  "mood-enhancer": "#06b6d4",
+  "grammar-check": "#a855f7",
+  "footer": "#2563eb"
 };
 
 const Navbar = () => {
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, user, logOut } = useAuth();
   const [activeTab, setActiveTab] = useState("tone-classifier");
   const [theme, setTheme] = useState(tabThemes["tone-rewriter"]);
 
@@ -22,6 +29,17 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
+      // The footer is much shorter than the other (full-height) sections, so the
+      // "most visible section" logic below never picks it. Treat reaching the
+      // bottom of the page as being on the footer.
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 2;
+      if (atBottom) {
+        if (activeTab !== "footer") setActiveTab("footer");
+        return;
+      }
+
       // Get all sections
       const sections = Object.keys(tabThemes).map(id => {
         const element = document.getElementById(id);
@@ -64,9 +82,11 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 w-full text-white flex justify-between items-center px-6 py-4 shadow-lg z-50 transition-all duration-300 ${theme}`}>
       {/* Logo */}
-      <div className="flex items-center space-x-2">
-        <img src={logo} alt="Logo" className="h-10 w-10" />
-        <span className="text-xl font-bold">Tone Rewriter</span>
+      <div className="flex items-center space-x-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/50 bg-white/15 shadow-inner backdrop-blur-sm">
+          <span className="text-sm font-extrabold tracking-tight text-white">EIS</span>
+        </div>
+        <span className="text-xl font-bold">Emotion Intelligence Suite</span>
       </div>
 
       {/* Navigation Links */}
@@ -77,7 +97,8 @@ const Navbar = () => {
             to={tab}
             smooth={true}
             duration={500}
-            className={`cursor-pointer px-3 py-2 rounded-lg transition-all ${activeTab === tab ? "bg-white text-black" : "hover:text-gray-300"}`}
+            style={{ "--tab-glow": tabAccentColors[tab] }}
+            className={`select-none cursor-pointer px-3 py-2 rounded-lg transition-all ${activeTab === tab ? "nav-tab-active bg-white text-black" : "hover:text-gray-300"}`}
             onClick={() => setActiveTab(tab)}
           >
             {tab.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -86,9 +107,18 @@ const Navbar = () => {
       </div>
 
       {/* Sign In / Sign Up Button */}
-      <button onClick={openAuthModal} className="bg-white text-black px-4 py-2 rounded-2xl hover:opacity-80 transition">
-        Sign In / Sign Up
-      </button>
+      {user ? (
+        <div className="flex items-center space-x-3">
+          <span className="text-sm hidden md:inline">{user.email}</span>
+          <button onClick={logOut} className="bg-white text-black px-4 py-2 rounded-2xl hover:opacity-80 transition">
+            Sign Out
+          </button>
+        </div>
+      ) : (
+        <button onClick={openAuthModal} className="bg-white text-black px-4 py-2 rounded-2xl hover:opacity-80 transition">
+          Sign In / Sign Up
+        </button>
+      )}
     </nav>
   );
 };

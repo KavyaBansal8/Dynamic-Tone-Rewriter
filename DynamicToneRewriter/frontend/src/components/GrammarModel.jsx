@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 import { motion } from "framer-motion";
 import { Client } from "@gradio/client";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 // Text Input Component
 function TextInputBox({ onSubmit, transcribedText }) {
@@ -118,17 +119,15 @@ function ChoiceModal({ onClose, onUpload, onRecord, onTextInput }) {
 // 3D Ball Component - Input Ball (Left)
 function InputBall({ onBallClick, isActive }) {
   const mesh = useRef();
-  const [scale, setScale] = useState(1);
 
   useFrame(({ clock }) => {
-    if (isActive) {
-      const time = clock.getElapsedTime();
-      const dynamicScale = 1 + Math.sin(time * 2) * 0.1;
-      setScale(dynamicScale);
-      mesh.current.scale.set(dynamicScale, dynamicScale, dynamicScale);
-    } else {
-      mesh.current.scale.set(1, 1, 1);
-    }
+    if (!mesh.current) return;
+    const time = clock.getElapsedTime();
+    // Idle: slow, gentle pulse. Active (recording/processing): fast pulse.
+    const s = isActive
+      ? 1 + Math.sin(time * 4) * 0.12
+      : 1 + Math.sin(time * 0.8) * 0.06;
+    mesh.current.scale.set(s, s, s);
   });
 
   return (
@@ -151,19 +150,17 @@ function InputBall({ onBallClick, isActive }) {
 // 3D Ball Component - Output Ball (Right)
 function OutputBall({ isActive, isAudioPlaying }) {
     const mesh = useRef();
-  
+
     useFrame(({ clock }) => {
-      if (isAudioPlaying) {
-        // Only animate when audio is playing
-        const time = clock.getElapsedTime();
-        const dynamicScale = 1 + Math.sin(time * 2) * 0.1;
-        mesh.current.scale.set(dynamicScale, dynamicScale, dynamicScale);
-        mesh.current.rotation.y = time * 0.5;
-      } else {
-        // No animation when audio isn't playing
-        mesh.current.scale.set(1, 1, 1);
-        mesh.current.rotation.y = 0;
-      }
+      if (!mesh.current) return;
+      const time = clock.getElapsedTime();
+      // Fast pulse + spin while audio plays or while processing, slow idle pulse otherwise.
+      const busy = isAudioPlaying || isActive;
+      const s = busy
+        ? 1 + Math.sin(time * 4) * 0.12
+        : 1 + Math.sin(time * 0.8) * 0.06;
+      mesh.current.scale.set(s, s, s);
+      mesh.current.rotation.y = isAudioPlaying ? time * 0.5 : 0;
     });
   
     return (
@@ -184,6 +181,8 @@ function OutputBall({ isActive, isAudioPlaying }) {
 
 // Main Component
 export default function GrammarModel({ onClose }) {
+  useBodyScrollLock();
+
   // State management
   const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);

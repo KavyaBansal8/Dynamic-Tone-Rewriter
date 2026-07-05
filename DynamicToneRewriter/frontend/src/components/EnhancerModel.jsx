@@ -3,10 +3,10 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { Client } from "@gradio/client";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 function VisualizerBall({ onBallClick, isProcessing }) {
   const mesh = useRef();
-  const [scale, setScale] = useState(1);
 
   // Handle ball click
   const handleClick = () => {
@@ -14,18 +14,13 @@ function VisualizerBall({ onBallClick, isProcessing }) {
   };
 
   useFrame(({ clock }) => {
+    if (!mesh.current) return;
     const time = clock.getElapsedTime();
-    
-    if (isProcessing) {
-      // More intense animation during processing
-      const dynamicScale = 1 + Math.sin(time * 2) * 0.2;
-      setScale(dynamicScale);
-      mesh.current.scale.set(dynamicScale, dynamicScale, dynamicScale);
-    } else {
-      // Gentle pulsing in idle state
-      const idleScale = 1 + Math.sin(time * 0.5) * 0.05;
-      mesh.current.scale.set(idleScale, idleScale, idleScale);
-    }
+    // Idle: slow, gentle pulse. Processing: fast pulse.
+    const s = isProcessing
+      ? 1 + Math.sin(time * 4) * 0.12
+      : 1 + Math.sin(time * 0.8) * 0.06;
+    mesh.current.scale.set(s, s, s);
   });
 
   return (
@@ -45,6 +40,8 @@ function VisualizerBall({ onBallClick, isProcessing }) {
 }
 
 export default function EnhancerModel({ onClose }) {
+  useBodyScrollLock();
+
   const [showText, setShowText] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState("Click the ball to start");

@@ -6,7 +6,7 @@ import AuthModal from "./components/AuthModal";
 import ToneClassifier from "./components/ToneClassifier";
 import ToneRewriter from "./components/ToneRewriter";
 import MoodEnhancer from "./components/MoodEnhancer";
-import GrammarCheck from "./components/GrammarCheck";
+import GrammarCheck from "./components/Grammarcheck";
 import Footer from "./components/Footer";
 import Bubble from "./components/Bubble";
 

@@ -82,18 +82,12 @@ const MoodEnhancer = () => {
       <AnimatePresence>
         {isFullScreen && (
           <motion.div
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.7, opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="fixed top-0 left-0 w-screen h-screen bg-black flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed top-0 left-0 w-screen h-screen bg-black flex items-center justify-center z-40"
           >
-            <button
-              onClick={handleCloseFullScreen}
-              className="absolute top-4 right-4 text-white bg-red-600 px-4 py-2 rounded-full hover:bg-red-800"
-            >
-              Close
-            </button>
             <EnhancerModel onClose={handleCloseFullScreen} />
           </motion.div>
         )}

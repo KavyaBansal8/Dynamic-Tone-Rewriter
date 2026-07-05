@@ -1,21 +1,58 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
+export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey);
 
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const signInWithFacebook = () => signInWithPopup(auth, facebookProvider);
-export const signUpWithEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
-export const signInWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
+let auth = null;
+let googleProvider = null;
+let facebookProvider = null;
+
+if (isFirebaseConfigured) {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  facebookProvider = new FacebookAuthProvider();
+} else {
+  console.warn(
+    "Firebase is not configured (missing VITE_FIREBASE_* env vars). Auth features are disabled until you add them to a .env file — see .env.example."
+  );
+}
+
+const requireAuth = () => {
+  if (!auth) {
+    throw new Error("Authentication is not configured yet. Add your Firebase credentials to a .env file.");
+  }
+  return auth;
+};
+
+export const signInWithGoogle = () => signInWithPopup(requireAuth(), googleProvider);
+export const signInWithFacebook = () => signInWithPopup(requireAuth(), facebookProvider);
+export const signUpWithEmail = (email, password) => createUserWithEmailAndPassword(requireAuth(), email, password);
+export const signInWithEmail = (email, password) => signInWithEmailAndPassword(requireAuth(), email, password);
+export const logOut = () => signOut(requireAuth());
+
+export const subscribeToAuthChanges = (callback) => {
+  if (!auth) {
+    callback(null);
+    return () => {};
+  }
+  return onAuthStateChanged(auth, callback);
+};
